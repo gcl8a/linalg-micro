@@ -35,7 +35,7 @@
 #ifndef __LINALG_MATRIX_H
 #define __LINALG_MATRIX_H
 
-#include <vector.h>
+#include <vector_uC.h>
 #include <math.h>
 
 //using namespace std;
