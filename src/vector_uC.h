@@ -145,7 +145,7 @@ public:
 
 #define dvector TVector<double>
 #define fvector TVector<float>
-//#define ivector TVector<int>
+#define ivector TVector<int16_t>
 
 template < class T >
 TVector < T >::TVector( int length )
