@@ -32,6 +32,8 @@ fvector --> vector of floats
 #ifndef __LINALG_VECTOR_H
 #define __LINALG_VECTOR_H
 
+#include <Arduino.h>
+
 //using namespace std;
 /*
 template < class T >
