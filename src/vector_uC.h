@@ -26,31 +26,15 @@ Note that at the end, I define a few frequently used classes:
 
 vector --> vector of doubles
 fvector --> vector of floats
-///////ivector --> vector of ints
+ivector --> vector of ints
 */
 
 #ifndef __LINALG_VECTOR_H
 #define __LINALG_VECTOR_H
 
-#include <Arduino.h>
-
-//using namespace std;
 /*
-template < class T >
-T MIN( T t1, T t2 ) { return t1 < t2 ? t1 : t2; }
-
-template < class T >
-T MAX( T t1, T t2 )
-   { return t1 > t2 ? t1 : t2; }
-*/
-
-//see matrix.h
-
-
-/*
-Define a vector that runs from indices _lower->_upper, inclusive.
+Define a vector that runs from indices 0 -> _upper, inclusive.
 _tData is a pointer to the block allocated in memory, but
-_tIndex is offset so that it can be accessed properly
 */
 
 
@@ -60,10 +44,10 @@ class TVector
 private:
    int _upper;
    T * _tData;
-   T * _tIndex;
+   //T * _tIndex;
 
 public:
-   TVector( void ) : _upper( -1 ) { _tData = _tIndex = 0; }
+   TVector( void ) : _upper( -1 ) { _tData = 0; }
    TVector( int length );
    TVector( T * data, int length );
 
@@ -87,16 +71,16 @@ public:
       if ( i < 0 || i > _upper )
          throw XError( "Array out-of-bounds" );
 #endif
-      return _tIndex[i];
+      return _tData[i];
       }
 
-   unsigned int Length( void )const { return _upper + 1; }
+   unsigned int Length( void ) const { return _upper + 1; }
    T Last(void) const {return (*this)[Length()-1];}
    void Zero(void)
    {
 	   if(_tData)
 	   {
-		   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] = 0;
+		   for ( int i = 0; i <= _upper; i++ ) _tData[i] = 0;
 	   }
    }
 
@@ -147,15 +131,15 @@ public:
 
 #define dvector TVector<double>
 #define fvector TVector<float>
-#define ivector TVector<int16_t>
+#define ivector TVector<int>
 
 template < class T >
 TVector < T >::TVector( int length )
 : _upper( length - 1 )
    {
    _tData = new T[length];
-   _tIndex = _tData;
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] = 0;
+   //_tIndex = _tData;
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] = 0;
    }
 
 //create a vector from an existing array, data.
@@ -165,8 +149,8 @@ template < class T >
 TVector < T >::TVector( T * data, int length )
 : _upper( length - 1 )
    {
-   _tData = 0;
-   _tIndex = data;
+   _tData = data;
+   //_tIndex = data;
    }
 
 //creates a copy
@@ -176,9 +160,9 @@ TVector < T >::TVector( const TVector < T > & t )
 : _upper( t._upper )
    {
    _tData = new T[_upper + 1];
-   _tIndex = _tData;
+   //_tIndex = _tData;
 
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] = t._tIndex[i];
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] = t._tData[i];
    }
 
 //assignment operator
@@ -193,9 +177,9 @@ TVector < T > & TVector < T >::operator = ( const TVector < T > & tV )
 
    //now start anew
    _tData = new T[_upper + 1];
-   _tIndex = _tData;
+   //_tIndex = _tData;
 
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] = tV._tIndex[i];
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] = tV._tData[i];
    return * this;
    }
 
@@ -242,7 +226,7 @@ TVector < T > TVector < T >::operator - ( const TVector < T > & tV ) const
 #endif
 
    TVector < T > tDiff( Length() );
-   for ( int i = 0; i <= _upper; i++ ) tDiff[i] = _tIndex[i] - tV[i];
+   for ( int i = 0; i <= _upper; i++ ) tDiff[i] = _tData[i] - tV[i];
    return tDiff;
    }
 
@@ -254,7 +238,7 @@ TVector < T > & TVector < T >::operator += ( const TVector < T > & tV )
        throw XError( "Incompatible vector addition!" );
 #endif
 
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] += tV[i];
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] += tV[i];
    return * this;
    }
 
@@ -266,7 +250,7 @@ TVector < T > & TVector < T >::operator -= ( const TVector < T > & tV )
        throw XError( "Invalid vector subtraction!" );
 #endif
 
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] -= tV[i];
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] -= tV[i];
    return * this;
    }
 
@@ -287,14 +271,14 @@ TVector < T > TVector < T >::operator / ( const T & t ) const
 template < class T >
 TVector < T > & TVector < T >::operator *= ( const T & t )
    {
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] *= t;
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] *= t;
    return * this;
    }
 
 template < class T >
 TVector < T > & TVector < T >::operator /= ( const T & t )
    {
-   for ( int i = 0; i <= _upper; i++ ) _tIndex[i] /= t;
+   for ( int i = 0; i <= _upper; i++ ) _tData[i] /= t;
    return * this;
    }
 
@@ -323,7 +307,7 @@ T TVector < T >::Dot( const TVector < T > & tV ) const
 #endif
 
    T tDot = 0;
-   for ( int i = 0; i <= _upper; i++ ) tDot += _tIndex[i] * tV[i];
+   for ( int i = 0; i <= _upper; i++ ) tDot += _tData[i] * tV[i];
    return tDot;
    }
 
@@ -332,7 +316,7 @@ T TVector < T >::Average( void )const
    {
    T avg = 0;
    for ( int i = 0; i <= _upper; i++ )
-      { avg += _tIndex[i]; }
+      { avg += _tData[i]; }
 
    return avg / Length();
    }
@@ -351,8 +335,8 @@ T TVector < T >::Correl( const TVector < T > & tV ) const
 
    for ( int i = 0; i <= _upper; i++ )
       {
-      cov += ( _tIndex[i] - avg1 ) * ( tV[i] - avg2 );
-      var1 += ( _tIndex[i] - avg1 ) * ( _tIndex[i] - avg1 );
+      cov += ( _tData[i] - avg1 ) * ( tV[i] - avg2 );
+      var1 += ( _tData[i] - avg1 ) * ( _tData[i] - avg1 );
       var2 += ( tV[i] - avg2 ) * ( tV[i] - avg2 );
       }
 
@@ -362,10 +346,10 @@ T TVector < T >::Correl( const TVector < T > & tV ) const
 template < class T >
 T TVector < T >::FindMin( void ) const
    {
-   T tMin = _tIndex[0];
+   T tMin = _tData[0];
    for ( int i = 1; i <= _upper; i++ )
       {
-      tMin = _tIndex[i] < tMin ? _tIndex[i] : tMin;
+      tMin = _tData[i] < tMin ? _tData[i] : tMin;
       }
    return tMin;
    }
@@ -376,7 +360,7 @@ int TVector < T >::IndexOfMax( void )const
    int max = 0;
    for ( int i = 1; i <= _upper; i++ )
       {
-      max = _tIndex[i] > _tIndex[max] ? i : max;
+      max = _tData[i] > _tData[max] ? i : max;
       }
    return max;
    }
@@ -387,7 +371,7 @@ T TVector < T >::FindMax( void )const
    T tMax = 0;
    for ( int i = 0; i <= _upper; i++ )
       {
-      tMax = _tIndex[i] > tMax ? _tIndex[i] : tMax;
+      tMax = _tData[i] > tMax ? _tData[i] : tMax;
       }
    return tMax;
    }
@@ -398,7 +382,7 @@ T TVector < T >::AbsMax( void )const
    T tMax = 0;
    for ( int i = 0; i <= _upper; i++ )
       {
-      T fabsi = fabs( _tIndex[i] );
+      T fabsi = fabs( _tData[i] );
       tMax = fabsi > tMax ? fabsi : tMax;
       }
    return tMax;
@@ -411,7 +395,7 @@ T TVector < T >::CalcNorm( int order ) const
     if ( !order ) //zero is surrogate for infinity norm
         return AbsMax();
     
-    for ( int i = 0; i <= _upper; i++ ) tNorm += pow( fabs( _tIndex[i] ), order );
+    for ( int i = 0; i <= _upper; i++ ) tNorm += pow( fabs( _tData[i] ), order );
     return pow( tNorm, 1.0 / ( double )order );
 }
 
@@ -419,7 +403,7 @@ T TVector < T >::CalcNorm( int order ) const
 template < class T > T TVector < T >::CalcL2Norm( void ) const
 {
     T tNorm = 0;
-    for ( int i = 0; i <= _upper; i++ ) tNorm += _tIndex[i] * _tIndex[i];
+    for ( int i = 0; i <= _upper; i++ ) tNorm += _tData[i] * _tData[i];
     return sqrt(tNorm);
 }
 

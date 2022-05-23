@@ -32,24 +32,21 @@
   imatrix --> matrix of ints
 */
 
-#ifndef __LINALG_MATRIX_H
-#define __LINALG_MATRIX_H
+#pragma once
 
 #include <vector_uC.h>
 #include <math.h>
-
-//using namespace std;
 
 /*
   class TMatrix is a matrix of T objects, stored as double pointers
   there is little error checking, so inverting a non-square matrix will likely crash
 
-  the matrix runs from _mLower->_mUpper and similar for n
-  (n.b., the matrix is M rows x N columns)
+  the matrix runs from [0.._mUpper][0.._nUpper]
+  (n.b., the matrix is M rows x N columns, where _mUpper = M - 1, etc.
 
   memory is allocated (and managed) for _pptData
-  _pptIndeces is offset to accomodate _nLower!=0
-  _tMatrix is offset to accomodate _mLower!=0
+  //// obsolete: _pptIndeces is offset to accomodate _nLower!=0
+  //// _tMatrix is offset to accomodate _mLower!=0
 
   ONLY _tMatrix should be accessed by normal functions
 */
@@ -57,16 +54,16 @@
 template < class T > class TMatrix
 {
  private:
-  T * * _pptData;
-  T * * _pptIndeces;
+  T** _pptData;
+//  T** _pptIndeces; //vestigial from when matrix could be non-zero based
 
   int _mUpper;
   int _nUpper;
  protected:
-  T * * _tMatrix;
+  T** _tMatrix;
 
  public:
-  TMatrix( void ) : _pptData( 0 ), _pptIndeces( 0 ), _tMatrix( 0 )
+  TMatrix( void ) : _pptData( 0 ), _tMatrix( 0 )   //,_pptIndeces( 0 )
     {
       _mUpper = _nUpper = -1;
     }
@@ -193,8 +190,6 @@ template < class T > class TMatrix
   static TMatrix < T > Eye( int size );
 };
 
-#define dmatrix TMatrix<double>
-//#define imatrix TMatrix<int>
 
 template < class T >
 TMatrix < T >::TMatrix( int m, int n )
@@ -203,13 +198,13 @@ TMatrix < T >::TMatrix( int m, int n )
       */
 {
   _pptData = new T * [m];
-  _pptIndeces = new T * [m];
+  //_pptIndeces = new T * [m];
 
-  _tMatrix = _pptIndeces;
+  _tMatrix = _pptData; //_pptIndeces;
   for ( int i = 0; i < m; i++ )
     {
       _pptData[i] = new T[n];
-      _pptIndeces[i] = & _pptData[i] [0];
+      //_pptIndeces[i] = & _pptData[i] [0];
     }
 
   Zero();
@@ -223,13 +218,13 @@ TMatrix < T >::TMatrix( const TMatrix & tMatrix )
   int n = _nUpper + 1;
 
   _pptData = new T * [m];
-  _pptIndeces = new T * [m];
+  //_pptIndeces = new T * [m];
 
-  _tMatrix = _pptIndeces;
+  _tMatrix = _pptData; //_pptIndeces;
   for ( int i = 0; i < m; i++ )
     {
       _pptData[i] = new T[n];
-      _pptIndeces[i] = & _pptData[i] [0];
+      //_pptIndeces[i] = & _pptData[i] [0];
       for ( int j = 0; j < n; j++ ) _pptData[i] [j] = tMatrix._pptData[i] [j];
     }
 }
@@ -242,13 +237,13 @@ TMatrix < T >::TMatrix( const TVector < T > & tV )
   int n = _nUpper + 1;
 
   _pptData = new T * [m];
-  _pptIndeces = new T * [m];
+  //_pptIndeces = new T * [m];
 
-  _tMatrix = _pptIndeces;
+  _tMatrix = _pptData; //_pptIndeces;
   for ( int i = 0; i < m; i++ )
     {
       _pptData[i] = new T[n];
-      _pptIndeces[i] = & _pptData[i] [0];
+      //_pptIndeces[i] = & _pptData[i] [0];
       _pptData[i] [0] = tV._tData[i];
     }
 }
@@ -258,11 +253,9 @@ TMatrix < T > & TMatrix < T >::operator = ( const TMatrix < T > & tMatrix )
 {
   if ( _pptData )
     {
-      for ( int i = 0; i <= _mUpper; i++ )
-	{ delete[] _pptData[i]; }
-
+      for ( int i = 0; i <= _mUpper; i++ ) { delete[] _pptData[i]; }
       delete[] _pptData;
-      delete[] _pptIndeces;
+      //delete[] _pptIndeces;
     }
 
   _mUpper = tMatrix._mUpper;
@@ -272,13 +265,13 @@ TMatrix < T > & TMatrix < T >::operator = ( const TMatrix < T > & tMatrix )
   int n = _nUpper + 1;
 
   _pptData = new T * [m];
-  _pptIndeces = new T * [m];
+  //_pptIndeces = new T * [m];
 
-  _tMatrix = _pptIndeces;
+  _tMatrix = _pptData; //_pptIndeces;
   for ( int i = 0; i < m; i++ )
     {
       _pptData[i] = new T[n];
-      _pptIndeces[i] = & _pptData[i] [0];
+      //_pptIndeces[i] = & _pptData[i] [0];
       for ( int j = 0; j < n; j++ ) _pptData[i] [j] = tMatrix._pptData[i] [j];
     }
 
@@ -290,11 +283,9 @@ TMatrix < T >::~TMatrix( void )
 {
   if ( _pptData )
     {
-      for ( int i = 0; i <= _mUpper; i++ )
-	{ delete[] _pptData[i]; }
-
+      for ( int i = 0; i <= _mUpper; i++ ) { delete[] _pptData[i]; }
       delete[] _pptData;
-      delete[] _pptIndeces;
+      //delete[] _pptIndeces;
     }
 }
 
@@ -882,73 +873,75 @@ TMatrix < T > TMatrix < T >::Eye( int size )
 
 
 
-class SampleMatrix : public dmatrix
-/*SampleMatrix assumes that the samples vectors are in the columns. i.e., there
-  are <rows> number of samples
-*/
-{
- protected:
-  dvector mean;
-  dmatrix covariance;
 
- public:
-  SampleMatrix( void ) { }
 
-  SampleMatrix( int vec_len, int samples )
-    : dmatrix( vec_len, samples ), mean( vec_len ), covariance( vec_len, vec_len ) { }
 
-  SampleMatrix( const SampleMatrix & sm ) : dmatrix( sm ), mean( sm.mean ),
-    covariance( sm.covariance )
-    { }
 
-  SampleMatrix & operator = ( const SampleMatrix & sm )
-    {
-      dmatrix::operator = ( sm );
-      mean = sm.mean;
-      covariance = sm.covariance;
-      return * this;
-    }
+// class SampleMatrix : public TMatrix<double>
+// /*SampleMatrix assumes that the samples vectors are in the columns. i.e., there
+//   are <rows> number of samples
+// */
+// {
+//  protected:
+//   TVector<double> mean;
+//   TMatrix<double> covariance;
 
-  ~SampleMatrix( void ) { }
+//  public:
+//   SampleMatrix( void ) { }
 
-  /*		int CalcMultiStats(dvector&, dmatrix&);
+//   SampleMatrix( int vec_len, int samples )
+//     : TMatrix<double>( vec_len, samples ), mean( vec_len ), covariance( vec_len, vec_len ) { }
 
-  };  */
+//   SampleMatrix( const SampleMatrix & sm ) : TMatrix<double>( sm ), mean( sm.mean ),
+//     covariance( sm.covariance )
+//     { }
 
-  double CalcMahalanobis( const dvector & t ) const
-    {
-      dvector mean;
-      dmatrix cov;
-      CalcMultiStats( mean, cov );
-      double mahal = ( mean - t ).Dot( cov.FindInverse() * ( mean - t ) );
+//   SampleMatrix & operator = ( const SampleMatrix & sm )
+//     {
+//       TMatrix<double>::operator = ( sm );
+//       mean = sm.mean;
+//       covariance = sm.covariance;
+//       return * this;
+//     }
 
-      return mahal;
-    }
+//   ~SampleMatrix( void ) { }
 
-  int CalcMultiStats( dvector & mean, dmatrix & covariance ) const
-    //calculates the mean and covariance of [columns] number of samples of [rows] dimensions
-    {
-      int N = CountColumns();
-      int M = CountRows();
+//   /*		int CalcMultiStats(dvector&, dmatrix&);
 
-      //find the mean
-      mean = dvector( M );
-      for ( int i = 0; i < N; i++ )
-	{ mean += GetColumn( i ); }
-      mean /= N;
+//   };  */
 
-      dmatrix cov( M, N );
-      //find the covariance
-      for ( int i = 0; i < N; i++ )
-	{
-	  //subtract the mean
-	  cov.SetColumn( i, GetColumn( i ) - mean );
-	}
+//   double CalcMahalanobis( const TVector<double> & t ) const
+//     {
+//       TVector<double> mean;
+//       TMatrix<double> cov;
+//       CalcMultiStats( mean, cov );
+//       double mahal = ( mean - t ).Dot( cov.FindInverse() * ( mean - t ) );
 
-      covariance = cov * cov.MakeTranspose() * ( 1.0 / ( double )( N - 1 ) );
+//       return mahal;
+//     }
 
-      return N;
-    }
-};
+//   int CalcMultiStats( TVector<double> & mean, TMatrix<double> & covariance ) const
+//     //calculates the mean and covariance of [columns] number of samples of [rows] dimensions
+//     {
+//       int N = CountColumns();
+//       int M = CountRows();
 
-#endif
+//       //find the mean
+//       mean = TVector<double>( M );
+//       for ( int i = 0; i < N; i++ )
+// 	{ mean += GetColumn( i ); }
+//       mean /= N;
+
+//       TMatrix<double> cov( M, N );
+//       //find the covariance
+//       for ( int i = 0; i < N; i++ )
+// 	{
+// 	  //subtract the mean
+// 	  cov.SetColumn( i, GetColumn( i ) - mean );
+// 	}
+
+//       covariance = cov * cov.MakeTranspose() * ( 1.0 / ( double )( N - 1 ) );
+
+//       return N;
+//     }
+// };
