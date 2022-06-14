@@ -63,10 +63,8 @@ template < class T > class TMatrix
   T** _tMatrix;
 
  public:
-  TMatrix( void ) : _pptData( 0 ), _tMatrix( 0 )   //,_pptIndeces( 0 )
-    {
-      _mUpper = _nUpper = -1;
-    }
+  TMatrix( void ) : _pptData( 0 ), _tMatrix( 0 ) { _mUpper = _nUpper = -1; }
+  
   TMatrix( int, int );
   TMatrix( const TMatrix < T > & );
   TMatrix( const TVector < T > & );
@@ -78,9 +76,9 @@ template < class T > class TMatrix
   int operator ! (void) {return !_pptData;}
 
   //checks to see if two vectors are compatible for comparison, addition, whatever
-  int IsSquare( void )const { return _mUpper == _nUpper; }
-  int IsSymmetric( void )const;
-  int IsCompatibleEqual( const TMatrix < T > & t ) const
+  int IsSquare(void) const { return _mUpper == _nUpper; }
+  int IsSymmetric(void) const;
+  int IsCompatibleEqual(const TMatrix < T > & t) const
     {
       return ( _mUpper == t._mUpper && _nUpper == t._nUpper );
     }
@@ -93,11 +91,11 @@ template < class T > class TMatrix
       return ( _mUpper == rhs._upper && IsSquare() );
     }
 
-  int IsCompatible( const TVector < T > & tV ) const
-    { return ( _nUpper == tV._upper ); }
+  // int IsCompatible( const TVector < T > & tV ) const
+  //   { return ( _nUpper == tV._upper ); }
 
-  int IsEqualRows( const TVector < T > & tV ) const
-    { return ( _mUpper == tV._upper ); }
+  // int IsEqualRows( const TVector < T > & tV ) const
+  //   { return ( _mUpper == tV._upper ); }
 
 /*  int IsEqualColumns( const TVector < T > & tV ) const
     //note, we're comparing columns of matrix to rows of vector

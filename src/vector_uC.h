@@ -38,9 +38,8 @@ _tData is a pointer to the block allocated in memory, but
 */
 
 
-template < class T >
-class TVector
-   {
+template <class T> class TVector
+{
 private:
    int _upper;
    T * _tData;
